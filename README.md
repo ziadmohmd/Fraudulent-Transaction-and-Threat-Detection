@@ -86,10 +86,7 @@ A comprehensive web-based fraud detection system that uses machine learning to i
    python app.py
    ```
 
-6. **Access the application**:
-   - Main Dashboard: http://127.0.0.1:5000/
-   - Login: http://127.0.0.1:5000/login
-   - Register: http://127.0.0.1:5000/register
+r
 
 ## 📖 Usage
 
@@ -291,4 +288,5 @@ For support and questions:
 ---
 
 **⚠️ Security Notice**: This system handles sensitive financial data. Ensure proper security measures are in place before deployment in production environments.
+
 
