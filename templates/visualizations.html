@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar"></i> Advanced Visualizations</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Fraud Detection Over Time</h5>
+            </div>
+            <div class="card-body">
+                <div id="time-series-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Transaction Amount Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div id="amount-distribution"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Model Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div id="performance-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Feature Importance</h5>
+            </div>
+            <div class="card-body">
+                <div id="feature-importance"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Real-time Threat Heatmap</h5>
+            </div>
+            <div class="card-body">
+                <div id="threat-heatmap"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Generate sample data for visualizations
+function generateTimeSeriesData() {
+    const data = [];
+    const fraudData = [];
+    const legitData = [];
+    const times = [];
+    
+    for (let i = 0; i < 24; i++) {
+        const time = `${i.toString().padStart(2, '0')}:00`;
+        const fraud = Math.floor(Math.random() * 20) + 5;
+        const legit = Math.floor(Math.random() * 200) + 100;
+        
+        times.push(time);
+        fraudData.push(fraud);
+        legitData.push(legit);
+    }
+    
+    const trace1 = {
+        x: times,
+        y: fraudData,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Fraud Transactions',
+        line: { color: '#dc3545' }
+    };
+    
+    const trace2 = {
+        x: times,
+        y: legitData,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Legitimate Transactions',
+        line: { color: '#28a745' }
+    };
+    
+    const layout = {
+        title: '24-Hour Transaction Pattern',
+        xaxis: { title: 'Hour of Day' },
+        yaxis: { title: 'Transaction Count' },
+        height: 300
+    };
+    
+    Plotly.newPlot('time-series-chart', [trace1, trace2], layout);
+}
+
+function generateAmountDistribution() {
+    const fraudAmounts = Array.from({length: 100}, () => Math.random() * 10000 + 5000);
+    const legitAmounts = Array.from({length: 500}, () => Math.random() * 5000 + 100);
+    
+    const trace1 = {
+        x: fraudAmounts,
+        type: 'histogram',
+        name: 'Fraud',
+        opacity: 0.7,
+        marker: { color: '#dc3545' },
+        nbinsx: 20
+    };
+    
+    const trace2 = {
+        x: legitAmounts,
+        type: 'histogram',
+        name: 'Legitimate',
+        opacity: 0.7,
+        marker: { color: '#28a745' },
+        nbinsx: 20
+    };
+    
+    const layout = {
+        title: 'Transaction Amount Distribution',
+        xaxis: { title: 'Amount ($)' },
+        yaxis: { title: 'Frequency' },
+        barmode: 'overlay',
+        height: 300
+    };
+    
+    Plotly.newPlot('amount-distribution', [trace1, trace2], layout);
+}
+
+function generatePerformanceChart() {
+    const metrics = ['Precision', 'Recall', 'F1-Score', 'Accuracy'];
+    const xgboost = [0.95, 0.92, 0.93, 0.94];
+    const randomForest = [0.89, 0.87, 0.88, 0.89];
+    const logistic = [0.82, 0.79, 0.80, 0.81];
+    
+    const trace1 = {
+        x: metrics,
+        y: xgboost,
+        type: 'bar',
+        name: 'XGBoost',
+        marker: { color: '#007bff' }
+    };
+    
+    const trace2 = {
+        x: metrics,
+        y: randomForest,
+        type: 'bar',
+        name: 'Random Forest',
+        marker: { color: '#28a745' }
+    };
+    
+    const trace3 = {
+        x: metrics,
+        y: logistic,
+        type: 'bar',
+        name: 'Logistic Regression',
+        marker: { color: '#ffc107' }
+    };
+    
+    const layout = {
+        title: 'Model Performance Comparison',
+        xaxis: { title: 'Metrics' },
+        yaxis: { title: 'Score', range: [0, 1] },
+        barmode: 'group',
+        height: 300
+    };
+    
+    Plotly.newPlot('performance-chart', [trace1, trace2, trace3], layout);
+}
+
+function generateFeatureImportance() {
+    const features = ['Amount', 'Balance Drop', 'Zero Balance', 'Transaction Type', 'Time Step'];
+    const importance = [0.35, 0.28, 0.18, 0.12, 0.07];
+    
+    const trace = {
+        x: importance,
+        y: features,
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: '#17a2b8' }
+    };
+    
+    const layout = {
+        title: 'XGBoost Feature Importance',
+        xaxis: { title: 'Importance Score' },
+        height: 300,
+        margin: { l: 120 }
+    };
+    
+    Plotly.newPlot('feature-importance', [trace], layout);
+}
+
+function generateThreatHeatmap() {
+    const hours = Array.from({length: 24}, (_, i) => i);
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    const z = days.map(() => 
+        hours.map(() => Math.random() * 100)
+    );
+    
+    const trace = {
+        z: z,
+        x: hours,
+        y: days,
+        type: 'heatmap',
+        colorscale: [
+            [0, '#28a745'],
+            [0.5, '#ffc107'],
+            [1, '#dc3545']
+        ]
+    };
+    
+    const layout = {
+        title: 'Threat Level Heatmap (Hour vs Day)',
+        xaxis: { title: 'Hour of Day' },
+        yaxis: { title: 'Day of Week' },
+        height: 300
+    };
+    
+    Plotly.newPlot('threat-heatmap', [trace], layout);
+}
+
+// Initialize all charts
+document.addEventListener('DOMContentLoaded', function() {
+    generateTimeSeriesData();
+    generateAmountDistribution();
+    generatePerformanceChart();
+    generateFeatureImportance();
+    generateThreatHeatmap();
+});
+
+// Update charts every 30 seconds
+setInterval(() => {
+    generateTimeSeriesData();
+    generateThreatHeatmap();
+}, 30000);
+</script>
+{% endblock %}

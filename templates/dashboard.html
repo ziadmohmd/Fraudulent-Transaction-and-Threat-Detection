@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-shield-alt"></i> Fraud Detection Dashboard</h1>
+            {% if current_user.is_authenticated and current_user.is_admin() %}
+            <div>
+                <a href="{{ url_for('developer_admin_panel') }}" class="btn btn-outline-danger btn-lg">
+                    <i class="fas fa-terminal me-2"></i>
+                    DEVELOPER PANEL
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Transactions</h5>
+                <h2 id="total-transactions">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5>Fraud Detected</h5>
+                <h2 id="fraud-count">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>High Risk</h5>
+                <h2 id="high-risk">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>System Status</h5>
+                <h2>Active</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Live Transaction Monitoring</h5>
+            </div>
+            <div class="card-body">
+                <div id="live-chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Threat Level Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div id="threat-pie-chart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Alerts</h5>
+            </div>
+            <div class="card-body">
+                <div id="alerts-container">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let fraudData = [];
+let timeLabels = [];
+
+function updateDashboard() {
+    fetch('/api/live_data')
+        .then(response => response.json())
+        .then(data => {
+            // Update cards
+            document.getElementById('total-transactions').textContent = data.total_transactions;
+            document.getElementById('fraud-count').textContent = data.fraud_count;
+            document.getElementById('high-risk').textContent = data.threat_levels.high + data.threat_levels.critical;
+            
+            // Update live chart
+            fraudData.push(data.fraud_count);
+            timeLabels.push(data.timestamp);
+            
+            if (fraudData.length > 20) {
+                fraudData.shift();
+                timeLabels.shift();
+            }
+            
+            updateLiveChart();
+            updateThreatChart(data.threat_levels);
+            
+            // Generate alerts for high threat levels
+            if (data.threat_levels.critical > 0 || data.threat_levels.high > 2) {
+                generateAlert(data);
+            }
+        });
+}
+
+function updateLiveChart() {
+    const trace = {
+        x: timeLabels,
+        y: fraudData,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Fraud Transactions',
+        line: { color: '#dc3545' }
+    };
+    
+    const layout = {
+        title: 'Real-time Fraud Detection',
+        xaxis: { title: 'Time' },
+        yaxis: { title: 'Fraud Count' },
+        height: 300
+    };
+    
+    Plotly.newPlot('live-chart', [trace], layout);
+}
+
+function updateThreatChart(threatLevels) {
+    const data = [{
+        values: [threatLevels.critical, threatLevels.high, threatLevels.medium, threatLevels.low],
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        type: 'pie',
+        marker: {
+            colors: ['#dc3545', '#fd7e14', '#ffc107', '#20c997']
+        }
+    }];
+    
+    const layout = {
+        height: 300,
+        showlegend: true
+    };
+    
+    Plotly.newPlot('threat-pie-chart', data, layout);
+}
+
+function generateAlert(data) {
+    const alertsContainer = document.getElementById('alerts-container');
+    const alertTime = new Date().toLocaleTimeString();
+    
+    let alertLevel = 'warning';
+    let alertText = `High risk activity detected at ${alertTime}`;
+    
+    if (data.threat_levels.critical > 0) {
+        alertLevel = 'danger';
+        alertText = `CRITICAL: ${data.threat_levels.critical} critical threats detected at ${alertTime}`;
+    }
+    
+    const alertHtml = `
+        <div class="alert alert-${alertLevel} alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle"></i> ${alertText}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertsContainer.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Keep only last 5 alerts
+    const alerts = alertsContainer.querySelectorAll('.alert');
+    if (alerts.length > 5) {
+        alerts[alerts.length - 1].remove();
+    }
+}
+
+// Update dashboard every 3 seconds
+setInterval(updateDashboard, 3000);
+updateDashboard(); // Initial load
+</script>
+{% endblock %}

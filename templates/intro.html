@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraudulent Transaction and Threat Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --dark-color: #34495e;
+            --light-color: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(44, 62, 80, 0.8), rgba(52, 73, 94, 0.8)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23ffffff" opacity="0.1"><polygon points="1000,100 1000,0 0,100"/></svg>');
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="%23ffffff" stroke-width="0.5" opacity="0.1"><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="25"/><circle cx="50" cy="50" r="10"/></svg>') repeat;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .section:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .section:nth-child(odd) {
+            background-color: white;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+
+        .fraud-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .fraud-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .fraud-icon {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border-top: 5px solid var(--secondary-color);
+        }
+
+        .team-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .team-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .process-step {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--success-color), var(--secondary-color));
+        }
+
+        .process-step:hover {
+            transform: scale(1.05);
+        }
+
+        .process-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--accent-color), var(--warning-color));
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(231, 76, 60, 0.4);
+            color: white;
+        }
+
+        .cta-button:active {
+            transform: translateY(-1px);
+        }
+
+        .stats-counter {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 10s;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 50px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h1 class="hero-title">
+                        <i class="fas fa-shield-alt me-3"></i>
+                        Fraudulent Transaction and Threat Detection
+                    </h1>
+                    <p class="hero-subtitle">
+                        Advanced AI-powered system for real-time fraud detection and prevention in digital financial transactions.
+                        Protecting your financial ecosystem with cutting-edge machine learning technology and intelligent threat assessment.
+                    </p>
+                    <div class="mb-4">
+                        <span class="badge bg-success me-2 p-2">
+                            <i class="fas fa-check me-1"></i> XGBoost ML Model
+                        </span>
+                        <span class="badge bg-info me-2 p-2">
+                            <i class="fas fa-eye me-1"></i> Anomaly Detection
+                        </span>
+                        <span class="badge bg-warning me-2 p-2">
+                            <i class="fas fa-file-upload me-1"></i> Multi-format Support
+                        </span>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-md-4">
+                            <div class="stats-counter">99.2%</div>
+                            <p>Detection Accuracy</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-counter">&lt;1s</div>
+                            <p>Response Time</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-counter">24/7</div>
+                            <p>Monitoring</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fraud Awareness Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Understanding Fraud & Prevention
+            </h2>
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="fraud-card">
+                        <div class="fraud-icon">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <h4>What is Fraud?</h4>
+                        <p>Financial fraud involves deceptive practices to gain unauthorized access to funds or personal information. It includes identity theft, credit card fraud, money laundering, and unauthorized transactions that can cause significant financial losses.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="fraud-card">
+                        <div class="fraud-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4>Why Detection Matters</h4>
+                        <p>Fraud detection is crucial for protecting financial institutions and customers. Early detection prevents losses, maintains trust, ensures regulatory compliance, and safeguards the integrity of financial systems in our digital economy.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="fraud-card">
+                        <div class="fraud-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>Prevention Strategies</h4>
+                        <ul class="text-start">
+                            <li>Real-time transaction monitoring</li>
+                            <li>Multi-factor authentication</li>
+                            <li>Machine learning anomaly detection</li>
+                            <li>Regular security audits</li>
+                            <li>User behavior analysis</li>
+                            <li>Immediate alert systems</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="floating-shapes">
+            <div class="shape"><i class="fas fa-lock" style="font-size: 3rem;"></i></div>
+            <div class="shape"><i class="fas fa-eye" style="font-size: 2.5rem;"></i></div>
+            <div class="shape"><i class="fas fa-brain" style="font-size: 3.5rem;"></i></div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">
+                <i class="fas fa-users me-2"></i>
+                About Our Team
+            </h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center mb-5">
+                    <h4 class="mb-4">Group Project</h4>
+                    <p class="lead">This fraud detection system is the result of collaborative effort by a dedicated team of developers and data scientists, committed to creating innovative solutions for financial security.</p>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-5 col-md-6 mb-4">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h4>FASIL RAHMAN</h4>
+                        <p class="text-muted">
+                        <p>Specialized in machine learning algorithms, fraud detection models, and system architecture design.</p>
+                        <div class="mt-3">
+                            <i class="fas fa-code text-primary me-2"></i>
+                            <i class="fas fa-brain text-success me-2"></i>
+                            <i class="fas fa-database text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 col-md-6 mb-4">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h4>MOHAMMED SIYAD</h4>
+                        <p class="text-muted">
+                        <p>Expert in web development, data visualization, and creating intuitive user interfaces for complex systems.</p>
+                        <div class="mt-3">
+                            <i class="fas fa-laptop-code text-info me-2"></i>
+                            <i class="fas fa-chart-bar text-danger me-2"></i>
+                            <i class="fas fa-palette text-red"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Summary Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">
+                <i class="fas fa-cogs me-2"></i>
+                How We Built This Project
+            </h2>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <p class="lead text-center mb-5">Our comprehensive approach to building an advanced fraud detection system</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="process-step">
+                        <div class="process-number">1</div>
+                        <h5><i class="fas fa-database me-2"></i>Dataset Collection</h5>
+                        <p>Gathered comprehensive financial transaction datasets with labeled fraud cases for training and validation purposes.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="process-step">
+                        <div class="process-number">2</div>
+                        <h5><i class="fas fa-brain me-2"></i>ML Model Training</h5>
+                        <p>Implemented XGBoost for fraud classification and Isolation Forest for anomaly detection with optimized hyperparameters.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="process-step">
+                        <div class="process-number">3</div>
+                        <h5><i class="fas fa-tachometer-alt me-2"></i>Real-time Dashboard</h5>
+                        <p>Created interactive dashboards with live monitoring, data visualization, and comprehensive analytics capabilities.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="process-step">
+                        <div class="process-number">4</div>
+                        <h5><i class="fas fa-bell me-2"></i>Alert Generation</h5>
+                        <p>Developed intelligent alert systems with threat level classification and real-time notification mechanisms.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="process-step">
+                        <div class="process-number">5</div>
+                        <h5><i class="fas fa-server me-2"></i>Flask Deployment</h5>
+                        <p>Deployed the complete system using Flask framework with scalable architecture and robust security features.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="process-step">
+                        <div class="process-number">6</div>
+                        <h5><i class="fas fa-file-upload me-2"></i>Multi-format Support</h5>
+                        <p>Integrated support for CSV, Excel, and PDF file uploads with intelligent data extraction and processing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="mb-4">
+                        <i class="fas fa-rocket me-3"></i>
+                        Ready to Explore Our Fraud Detection System?
+                    </h2>
+                    <p class="lead mb-5">
+                        Experience the power of AI-driven fraud detection with real-time monitoring,
+                        comprehensive analytics, and intelligent threat assessment.
+                    </p>
+                    <a href="/login" class="cta-button me-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Login
+                    </a>
+                    <a href="/register" class="cta-button" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Sign Up
+                    </a>
+                    <div class="row mt-5">
+                        <div class="col-md-3 col-6">
+                            <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                            <p>Secure</p>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <i class="fas fa-bolt fa-2x mb-2"></i>
+                            <p>Fast</p>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <i class="fas fa-brain fa-2x mb-2"></i>
+                            <p>Intelligent</p>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <i class="fas fa-clock fa-2x mb-2"></i>
+                            <p>Real-time</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2025 Fraud Detection System. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>Built with <i class="fas fa-heart text-danger"></i> using Flask & Machine Learning</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards and sections
+        document.querySelectorAll('.fraud-card, .team-card, .process-step').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Counter animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stats-counter');
+            counters.forEach(counter => {
+                const target = counter.innerText;
+                const isPercentage = target.includes('%');
+                const isTime = target.includes('s');
+                const isAvailability = target.includes('/');
+
+                if (isPercentage) {
+                    animateNumber(counter, 0, 99.2, '%');
+                } else if (isTime) {
+                    animateNumber(counter, 0, 1, 's', '<');
+                } else if (isAvailability) {
+                    counter.innerHTML = '24/7';
+                }
+            });
+        }
+
+        function animateNumber(element, start, end, suffix = '', prefix = '') {
+            const duration = 2000;
+            const increment = (end - start) / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= end) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                element.innerHTML = prefix + current.toFixed(1) + suffix;
+            }, 16);
+        }
+
+        // Start counter animation when hero section is visible
+        const heroObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    heroObserver.unobserve(entry.target);
+                }
+            });
+        });
+
+        heroObserver.observe(document.querySelector('.hero-section'));
+    </script>
+</body>
+</html>

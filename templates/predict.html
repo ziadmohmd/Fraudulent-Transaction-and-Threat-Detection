@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-search"></i> Single Transaction Prediction</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.step.label(class="form-label") }}
+                        {{ form.step(class="form-control") }}
+                        {% if form.step.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.step.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.amount.label(class="form-label") }}
+                        {{ form.amount(class="form-control", step="0.01") }}
+                        {% if form.amount.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.amount.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.old_balance_org.label(class="form-label") }}
+                        {{ form.old_balance_org(class="form-control", step="0.01") }}
+                        {% if form.old_balance_org.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.old_balance_org.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.new_balance_orig.label(class="form-label") }}
+                        {{ form.new_balance_orig(class="form-control", step="0.01") }}
+                        {% if form.new_balance_orig.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.new_balance_orig.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.transaction_type.label(class="form-label") }}
+                        {{ form.transaction_type(class="form-select") }}
+                        {% if form.transaction_type.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.transaction_type.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {{ form.submit(class="btn btn-primary btn-lg") }}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        {% if result %}
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Prediction Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="alert alert-{{ 'danger' if result.prediction == 1 else 'success' }}">
+                            <h4>
+                                {% if result.prediction == 1 %}
+                                    <i class="fas fa-exclamation-triangle"></i> FRAUD DETECTED
+                                {% else %}
+                                    <i class="fas fa-check-circle"></i> LEGITIMATE TRANSACTION
+                                {% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Fraud Probability:</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="badge bg-{{ 'danger' if result.probability > 0.5 else 'success' }}">
+                            {{ "%.2f%%" | format(result.probability * 100) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Threat Level:</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="badge threat-{{ result.threat_level.lower() }}">
+                            {{ result.threat_level }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Analysis Time:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ result.timestamp }}
+                    </div>
+                </div>
+
+                <div class="progress mb-3">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: {{ result.probability * 100 }}%; background-color: {{ result.color }}">
+                        Risk Score: {{ "%.1f%%" | format(result.probability * 100) }}
+                    </div>
+                </div>
+
+                {% if result.explanations %}
+                <div class="mt-3">
+                    <h6>Analysis Factors:</h6>
+                    <ul class="list-unstyled small">
+                        {% for explanation in result.explanations %}
+                        <li><i class="fas fa-info-circle text-info"></i> {{ explanation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar"></i> Batch Analysis Results</h2>
+        <p class="text-muted">File: {{ filename }} | Processed {{ results|length }} transactions</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3>{{ results | selectattr('prediction', 'equalto', 1) | list | length }}</h3>
+                <p>Fraud Detected</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ results | selectattr('threat_level', 'equalto', 'CRITICAL') | list | length + results | selectattr('threat_level', 'equalto', 'HIGH') | list | length }}</h3>
+                <p>High Risk</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ results | selectattr('prediction', 'equalto', 0) | list | length }}</h3>
+                <p>Legitimate</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ "%.1f%%" | format((results | selectattr('prediction', 'equalto', 1) | list | length / results | length) * 100) }}</h3>
+                <p>Fraud Rate</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h3>{{ results | selectattr('is_anomaly', 'equalto', true) | list | length }}</h3>
+                <p>Anomalies</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-dark text-white">
+            <div class="card-body text-center">
+                <h3>{{ "%.1f%%" | format((results | selectattr('is_anomaly', 'equalto', true) | list | length / results | length) * 100) }}</h3>
+                <p>Anomaly Rate</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Detailed Results</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportResults()">
+                    <i class="fas fa-download"></i> Export Results
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="resultsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Row #</th>
+                                <th>Fraud Prediction</th>
+                                <th>Fraud Probability</th>
+                                <th>Threat Level</th>
+                                <th>Anomaly Status</th>
+                                <th>Anomaly Score</th>
+                                <th>Risk Score</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr class="{{ 'table-danger' if result.prediction == 1 or result.is_anomaly else 'table-success' }}">
+                                <td>{{ result.row }}</td>
+                                <td>
+                                    {% if result.prediction == 1 %}
+                                        <span class="badge bg-danger">FRAUD</span>
+                                    {% else %}
+                                        <span class="badge bg-success">LEGIT</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ "%.2f%%" | format(result.probability * 100) }}</td>
+                                <td>
+                                    <span class="badge threat-{{ result.threat_level.lower() }}">
+                                        {{ result.threat_level }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if result.is_anomaly %}
+                                        <span class="badge" style="background-color: {{ result.anomaly_color }}; color: {{ 'white' if result.anomaly_color in ['red', 'orange'] else 'black' }}">
+                                            {{ result.anomaly_level }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">NORMAL</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if result.anomaly_score is defined %}
+                                        <small>{{ "%.4f" | format(result.anomaly_score) }}</small>
+                                    {% else %}
+                                        <small class="text-muted">N/A</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width: {{ result.probability * 100 }}%; background-color: {{ result.color }}">
+                                            {{ "%.1f%%" | format(result.probability * 100) }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if result.prediction == 1 or result.is_anomaly %}
+                                        <button class="btn btn-sm btn-warning" onclick="flagTransaction({{ result.row }})">
+                                            <i class="fas fa-flag"></i> Flag
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="fas fa-check"></i> OK
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportResults() {
+    // Simple CSV export functionality
+    const table = document.getElementById('resultsTable');
+    let csv = [];
+    
+    // Headers
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+    csv.push(headers.join(','));
+    
+    // Data rows
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td')).map(td => {
+            return td.textContent.replace(/,/g, ';').trim();
+        });
+        csv.push(cells.join(','));
+    });
+    
+    // Download
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'fraud_analysis_results.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function flagTransaction(rowNum) {
+    alert(`Transaction ${rowNum} has been flagged for manual review.`);
+    // Here you could send an API request to flag the transaction
+}
+</script>
+{% endblock %}

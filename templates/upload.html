@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-upload"></i> Batch File Upload & Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Supported File Formats:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-file-csv text-success"></i> CSV Files (.csv)</li>
+                                        <li><i class="fas fa-file-excel text-success"></i> Excel Files (.xlsx, .xls)</li>
+                                        <li><i class="fas fa-file-pdf text-danger"></i> PDF Files (.pdf)</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-file-alt text-primary"></i> Text Files (.txt)</li>
+                                        <li><i class="fas fa-file-code text-warning"></i> JSON Files (.json)</li>
+                                        <li><i class="fas fa-info-circle text-info"></i> Max size: 1000MB</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-center"><i class="fas fa-download text-primary"></i> Sample Dataset</h6>
+                                    <p class="card-text small text-center">Download a sample dataset to test the fraud detection system</p>
+
+                                    <!-- Format Selection -->
+                                    <div class="mb-3">
+                                        <label for="downloadFormat" class="form-label small"><strong>Choose Format:</strong></label>
+                                        <select class="form-select form-select-sm" id="downloadFormat">
+                                            <option value="csv">CSV (.csv) - For Upload Testing</option>
+                                            <option value="excel">Excel (.xlsx) - For Upload Testing</option>
+                                            <option value="pdf">PDF (.pdf) - Report Format Only</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Download Button -->
+                                    <div class="text-center">
+                                        <button onclick="downloadSample()" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-download"></i> Download Sample
+                                        </button>
+                                    </div>
+
+                                    <!-- Format Info -->
+                                    <div class="mt-2 text-center">
+                                        <small class="text-muted" id="formatInfo">21 transactions • CSV format</small>
+                                    </div>
+
+                                    <!-- Format Descriptions -->
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <div id="csvInfo" class="format-info">
+                                                <i class="fas fa-file-csv text-success"></i> <strong>CSV:</strong> Raw data, easy to import
+                                            </div>
+                                            <div id="excelInfo" class="format-info" style="display:none;">
+                                                <i class="fas fa-file-excel text-success"></i> <strong>Excel:</strong> Formatted with summary sheet
+                                            </div>
+                                            <div id="pdfInfo" class="format-info" style="display:none;">
+                                                <i class="fas fa-file-pdf text-danger"></i> <strong>PDF:</strong> Report format (first 15 rows)
+                                            </div>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="dropzone-form" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.file.label(class="form-label") }}
+                        {{ form.file(class="form-control", accept=".csv,.xlsx,.xls,.pdf") }}
+                        {% if form.file.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.file.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <strong>Required columns:</strong> step, amount, oldbalanceOrg, newbalanceOrig, type<br>
+                            <strong>PDF files:</strong> Must contain properly formatted tables. The system will automatically extract tabular data.<br>
+                            <strong>Security:</strong> Files are validated and scanned for security threats. Max size: 10MB.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="autoProcess" checked>
+                            <label class="form-check-label" for="autoProcess">
+                                <i class="fas fa-shield-alt text-success me-1"></i>
+                                Automatically process with secure fraud detection and anomaly detection models
+                            </label>
+                        </div>
+                    </div>
+
+                    {{ form.submit(class="btn btn-primary btn-lg") }}
+                </form>
+                
+                <div class="mt-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Required Data Format:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>step</th>
+                                            <th>amount</th>
+                                            <th>oldbalanceOrg</th>
+                                            <th>newbalanceOrig</th>
+                                            <th>type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>9839.64</td>
+                                            <td>170136.0</td>
+                                            <td>160296.36</td>
+                                            <td>PAYMENT</td>
+                                        </tr>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>1864.28</td>
+                                            <td>15580.0</td>
+                                            <td>0.0</td>
+                                            <td>TRANSFER</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Column Descriptions:</h6>
+                            <ul class="list-unstyled small">
+                                <li><strong>step:</strong> Time step of transaction</li>
+                                <li><strong>amount:</strong> Transaction amount</li>
+                                <li><strong>oldbalanceOrg:</strong> Original balance before transaction</li>
+                                <li><strong>newbalanceOrig:</strong> New balance after transaction</li>
+                                <li><strong>type:</strong> Transaction type (PAYMENT, TRANSFER, CASH_OUT, DEBIT)</li>
+                            </ul>
+                            <div class="alert alert-info small">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Tip:</strong> Use the sample dataset above to test the system with real fraud patterns!
+                            </div>
+
+                            <div class="alert alert-warning small mt-2">
+                                <i class="fas fa-file-pdf"></i>
+                                <strong>PDF Upload:</strong> For PDF files, ensure tables are clearly formatted. The system supports multiple extraction methods for best compatibility.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dropzone-form {
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.dropzone-form:hover {
+    border-color: #0056b3;
+    background-color: #f8f9fa;
+}
+</style>
+
+<script>
+function downloadSample() {
+    const format = document.getElementById('downloadFormat').value;
+    const downloadUrl = `/download_sample/${format}`;
+
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+    button.disabled = true;
+
+    // Create a temporary link to trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Reset button after a short delay
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }, 2000);
+}
+
+// Update format info when selection changes
+document.getElementById('downloadFormat').addEventListener('change', function() {
+    const format = this.value;
+    const formatInfo = document.getElementById('formatInfo');
+
+    // Hide all format info divs
+    document.querySelectorAll('.format-info').forEach(div => {
+        div.style.display = 'none';
+    });
+
+    // Show selected format info
+    document.getElementById(format + 'Info').style.display = 'block';
+
+    // Update format info text
+    switch(format) {
+        case 'csv':
+            formatInfo.textContent = '21 transactions • CSV format';
+            break;
+        case 'excel':
+            formatInfo.textContent = '21 transactions • Excel format with summary';
+            break;
+        case 'pdf':
+            formatInfo.textContent = '15 transactions • PDF report format';
+            break;
+    }
+});
+
+// Initialize format info on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('downloadFormat').dispatchEvent(new Event('change'));
+});
+</script>
+
+{% endblock %}
